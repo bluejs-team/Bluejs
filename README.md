@@ -15,7 +15,7 @@ echo 'window.open("<h1>Hello from Blue</h1>", "Hello", 800, 500);' > hello.js
 blue -compile hello.js -o hello && ./hello
 ```
 
-**[bluejs.dev](https://bluejs.dev) - [Discord](https://discord.gg/zpdkarzmd4)**
+**[bluejs.dev](https://bluejs.dev) - [Discord](https://discord.gg/P9ym64jZqZ)**
 
 ---
 
@@ -146,7 +146,7 @@ The island runs embedded QuickJS, not Node.js. Pure JavaScript packages are most
 
 ## Community
 
-- **Discord:** [discord.gg/zpdkarzmd4](https://discord.gg/zpdkarzmd4)
+- **Discord:** [discord.gg/P9ym64jZqZ](https://discord.gg/P9ym64jZqZ)
 - **Issues:** [github.com/bluejs-team/Bluejs/issues](https://github.com/bluejs-team/Bluejs/issues)
 - **Website:** [bluejs.dev](https://bluejs.dev)
 
