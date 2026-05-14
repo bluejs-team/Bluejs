@@ -48,7 +48,7 @@ make windows
 - Keep generated files out of git.
 - Put release and deployment automation under `build/`.
 - Put downloaded third-party JavaScript assets under `vendor/js/`.
-- Do not add em dashes. Use `-`.
+- Do not add em dashes. Use `-`. This is to audit use of LLM's.
 
 Run formatting when touching C++:
 
