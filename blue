@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# blue - JS-to-C++ compiler driver
+#
+# Usage:
+#   ./blue init [<dir>] [--build]
+#   ./blue build [<dir>] [-o output] [--no-inline-html]
+#   ./blue run [<dir>] [--time|--benchmark] [-- app-args…]
+#   ./blue -compile input.js [-o output] [-cflags "extra c++ link flags"]
+#   ./blue --print-c input.js
+#
+# Environment:
+#   CXX      C++ compiler for emitted programs (default: c++)
+#   BLUE_BIN Path to blue_bin (default: auto-detected)
+
+set -euo pipefail
+
+# Resolve symlinks so SCRIPT_DIR points to the real directory of this script,
+# not the directory of whatever symlink was used to invoke it.
+_SELF="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || realpath "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd "$(dirname "$_SELF")" && pwd)"
+
+# -- Locate the compiler binary ------------------------------------------------
+if [ -n "${BLUE_BIN:-}" ] && [ -x "$BLUE_BIN" ]; then
+    BIN="$BLUE_BIN"
+elif [ -x "$SCRIPT_DIR/blue_bin" ]; then
+    BIN="$SCRIPT_DIR/blue_bin"
+else
+    echo "blue: compiler binary not found (expected blue_bin). Run 'make' first." >&2
+    exit 1
+fi
+
+exec "$BIN" "$@"

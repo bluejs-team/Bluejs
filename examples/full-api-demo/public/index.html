@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blue Full API Demo</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: rgba(255,255,255,0.08);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --primary: #6366f1;
+      --accent: #8b5cf6;
+      --green: #4ade80;
+    }
+    * { box-sizing: border-box; margin: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 20px;
+      min-height: 100vh;
+    }
+    h1 {
+      color: var(--primary);
+      font-size: 1.4rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    h1 span { color: var(--muted); font-size: 0.85rem; font-weight: 400; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .card h2 {
+      font-size: 0.95rem;
+      color: var(--accent);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    button {
+      width: 100%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    button:hover { background: var(--accent); }
+    button:active { transform: scale(0.98); }
+    #log {
+      background: #000;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      min-height: 140px;
+      max-height: 240px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .tag {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-right: 4px;
+    }
+    .tag-core   { background: #6366f1; }
+    .tag-island { background: #10b981; }
+    .tag-err    { background: #ef4444; }
+  </style>
+</head>
+<body>
+  <h1>Blue Full API Demo <span>native WebView + AOT bridge</span></h1>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Compute &amp; I/O</h2>
+      <button onclick="runPrimes()">Primes to 500 (AOT Math)</button>
+      <button onclick="runFS()">File System write+read</button>
+      <button onclick="runExec()">Process.exec uname -a</button>
+    </div>
+    <div class="card">
+      <h2>Native Desktop APIs</h2>
+      <button onclick="runSysInfo()">System.getMemoryInfo / getCPU</button>
+      <button onclick="runClipboard()">Clipboard write + read</button>
+      <button onclick="runWindow()">Window.setTitle / setSize</button>
+    </div>
+    <div class="card">
+      <h2>Island Bridge</h2>
+      <button onclick="runPing()">callIsland("handlePing")</button>
+    </div>
+    <div class="card">
+      <h2>HTTP Server</h2>
+      <button onclick="runHttp()">http-server demo (separate binary)</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Output</h2>
+    <div id="log">Ready - click a button above.</div>
+  </div>
+
+  <script>
+    // Convenience wrapper: fetch("blue://app/__bridge__/fn/encodedArg")
+    window.blue = {
+      call: function(fn, arg) {
+        var enc = (arg !== undefined && arg !== null)
+          ? encodeURIComponent(String(arg)) : "";
+        var url = "blue://app/__bridge__/" + fn + "/" + enc;
+        return fetch(url).then(function(r) { return r.text(); });
+      }
+    };
+
+    var logEl = document.getElementById("log");
+
+    function log(msg, type) {
+      var tag = document.createElement("span");
+      tag.className = "tag tag-" + (type || "core");
+      tag.textContent = type || "core";
+      var line = document.createElement("div");
+      line.appendChild(tag);
+      line.appendChild(document.createTextNode(" " + msg));
+      logEl.insertBefore(line, logEl.firstChild);
+    }
+
+    function logErr(msg) { log(msg, "err"); }
+
+    function runPrimes() {
+      window.blue.call("calculatePrimes", 500)
+        .then(function(r) { log("Primes up to 500: " + r.slice(0, 80) + "..."); })
+        .catch(logErr);
+    }
+
+    function runFS() {
+      window.blue.call("testFileSystem")
+        .then(function(r) { log("FS: " + r); })
+        .catch(logErr);
+    }
+
+    function runExec() {
+      window.blue.call("testExec")
+        .then(function(r) { log("Exec: " + r); })
+        .catch(logErr);
+    }
+
+    function runSysInfo() {
+      window.blue.call("getSystemStatus")
+        .then(function(r) { log("System: " + r); })
+        .catch(logErr);
+    }
+
+    function runClipboard() {
+      window.blue.call("testClipboard", "Blue clipboard test " + Date.now())
+        .then(function(r) { log("Clipboard read back: " + r); })
+        .catch(logErr);
+    }
+
+    function runWindow() {
+      window.blue.call("testWindowControl")
+        .then(function(r) { log("Window: " + r); })
+        .catch(logErr);
+    }
+
+    function runPing() {
+      window.blue.call("pingIsland")
+        .then(function(r) { log("Island response: " + r, "island"); })
+        .catch(logErr);
+    }
+
+    function runHttp() {
+      log("Run: ./blue -build examples/http-server -o /tmp/srv && /tmp/srv");
+      log("Then: curl http://127.0.0.1:48311/ and curl .../api/blue");
+    }
+  </script>
+</body>
+</html>

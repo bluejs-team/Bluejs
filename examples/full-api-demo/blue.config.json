@@ -1,0 +1,7 @@
+{
+  "entry": "src/core.js",
+  "quickjsIsland": "src/island.js",
+  "hybrid": true,
+  "bundlePlatform": "node",
+  "publicDir": "public"
+}

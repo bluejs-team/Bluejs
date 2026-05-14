@@ -1,0 +1,57 @@
+node_modules/
+.blue-build/
+.jsc-build/
+.env
+.env.*
+!.env.example
+.DS_Store
+*.local
+*.log
+
+# Private/local project mirrors
+/bluejs-playground/
+/examples/bluejs-landing/
+
+# Local build outputs
+/blue_bin
+/blue_bin.exe
+/examples/test
+/*.out
+/*.bin
+/NUL
+/log.txt
+/babel.min.js
+/esprima.js
+src/runtime/*.a
+vendor/quickjs/obj/
+vendor/quickjs/obj-win/
+vendor/libuv-win/
+vendor/webview2/
+
+# Release/package outputs
+/dist/
+*.deb
+*.tar.gz
+*.zip
+*.exe
+app.bundle.js
+public/downloads/
+
+# Secrets and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.csr
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+*.kdbx
+.npmrc
+.netrc
+credentials*
+secrets*
+secret*
+*token*
