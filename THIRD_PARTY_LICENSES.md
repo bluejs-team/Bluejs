@@ -6,8 +6,8 @@ files shipped by each dependency.
 
 ## Project License
 
-- Blue source: PolyForm Noncommercial License 1.0.0
-- SPDX identifier: `PolyForm-Noncommercial-1.0.0`
+- Blue source: PolyForm Small Business License 1.0.0
+- SPDX identifier: `PolyForm-Small-Business-1.0.0`
 - License file: `LICENSE`
 - Required notice file: `NOTICE`
 
