@@ -132,7 +132,7 @@ console.log(result.stdout);
 
 ## License
 
-Blue is licensed under the PolyForm Noncommercial License 1.0.0. See
+Blue is licensed under the Polyform Small Business License 1.0.0. See
 [LICENSE](LICENSE), [NOTICE](NOTICE), and
 [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
 
