@@ -24,8 +24,10 @@ if [ -n "${BLUE_BIN:-}" ] && [ -x "$BLUE_BIN" ]; then
     BIN="$BLUE_BIN"
 elif [ -x "$SCRIPT_DIR/blue_bin" ]; then
     BIN="$SCRIPT_DIR/blue_bin"
+elif [ -x "$SCRIPT_DIR/blue.exe" ]; then
+    BIN="$SCRIPT_DIR/blue.exe"
 else
-    echo "blue: compiler binary not found (expected blue_bin). Run 'make' first." >&2
+    echo "blue: compiler binary not found. Run 'make' first." >&2
     exit 1
 fi
 

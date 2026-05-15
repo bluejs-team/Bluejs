@@ -65,8 +65,8 @@ namespace fs = std::filesystem;
 static void printUsage(const char* prog) {
     const char* name = prog;
     if (const char* slash = strrchr(prog, '/')) name = slash + 1;
-    // Show "blue" regardless of whether invoked as blue_bin or via the wrapper
-    const char* display = (strcmp(name, "blue_bin") == 0) ? "blue" : name;
+    if (const char* slash = strrchr(name, '\\')) name = slash + 1;
+    const char* display = name;
     std::cerr << "Blue " << BLUE_VERSION << " - JavaScript-to-native compiler\n\n"
               << "Usage:\n"
               << "  " << display << " -compile <input.js> [-o out] [-cflags \"extra\"]\n"
@@ -104,6 +104,9 @@ int main(int argc, char** argv) {
         auto t0 = std::chrono::steady_clock::now();
         try {
             fs::path proj = fs::absolute(opts.projDirBuild);
+            if (!fs::exists(proj) || !fs::is_directory(proj))
+                throw std::runtime_error("blue: project directory not found: " +
+                                         proj.generic_string());
             fs::path bd   = proj / ".blue-build";
             fs::create_directories(bd);
 
@@ -304,8 +307,12 @@ int main(int argc, char** argv) {
 
             fs::path outBin =
                 opts.outputBinary.empty()
-                    ? bd / fs::path(proj.filename().string() + "_app.bin")
+                    ? fs::current_path() / fs::path(proj.filename().string())
                     : fs::absolute(opts.outputBinary);
+#ifdef _WIN32
+            if (outBin.extension() != ".exe")
+                outBin = outBin.replace_extension(".exe");
+#endif
 
             fs::path tmpCc = fs::temp_directory_path() /
                 ("blue_build_" + std::to_string(::getpid()) + "_" +
@@ -328,7 +335,7 @@ int main(int argc, char** argv) {
             invokeCompiler(binDirectory, cxx,
                            fs::weakly_canonical(tmpCc),
                            outBin.generic_string(), cpp,
-                           !controlPlane && !hybrid,
+                           false,
                            embed.generic_string(),
                            opts.extraCFlags);
             fs::remove(tmpCc);
@@ -383,8 +390,23 @@ int main(int argc, char** argv) {
     if (!opts.doCompile)
         opts.printC = true;
 
-    if (opts.doCompile && opts.outputBinary.empty())
-        opts.outputBinary = fs::path(opts.inputPath).stem().generic_string() + ".out";
+    if (opts.doCompile && opts.outputBinary.empty()) {
+        fs::path inp(opts.inputPath);
+        std::string stem = inp.stem().generic_string();
+        if (stem == "main" || stem == "index") {
+            fs::path parent = inp.parent_path().filename();
+            if (!parent.empty() && parent != "." && parent != "..")
+                stem = parent.generic_string();
+        }
+        opts.outputBinary = stem;
+    }
+#ifdef _WIN32
+    if (opts.doCompile) {
+        fs::path op(opts.outputBinary);
+        if (op.extension() != ".exe")
+            opts.outputBinary = op.replace_extension(".exe").generic_string();
+    }
+#endif
 
     QjsGuard qjs;
     if (!qjs.rt || !qjs.ctx) {

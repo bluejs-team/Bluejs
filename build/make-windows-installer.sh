@@ -20,7 +20,7 @@ if [[ -z "$VERSION" ]]; then
   echo "Could not read VERSION from Makefile" >&2; exit 1
 fi
 
-OUTDIR="${ROOT}/examples/bluejs-landing/public/downloads"
+OUTDIR="${ROOT}/dist"
 OUT_EXE="${OUTDIR}/blue-windows-x86_64-setup.exe"
 WIN_ZIP="${OUTDIR}/blue-windows-x86_64.zip"
 

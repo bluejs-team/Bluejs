@@ -294,7 +294,7 @@ static void invokeCompiler(const std::string& binDirectory, const std::string& c
         compileCmd += "-ObjC++ ";
 #endif
     compileCmd +=
-        "-std=c++17 -O2 -Wall -Wextra -I\"" + jsInclude + "\"";
+        "-std=c++17 -O2 -I\"" + jsInclude + "\"";
     if (haveRuntimeLib)
         compileCmd += " -ffunction-sections -fdata-sections";
 
@@ -306,7 +306,7 @@ static void invokeCompiler(const std::string& binDirectory, const std::string& c
         compileCmd += " " + sslCflags;
 
     if (wantsQ)
-        compileCmd += " -I\"" + qjsVendorIncl.generic_string() + "\"";
+        compileCmd += " -isystem \"" + qjsVendorIncl.generic_string() + "\"";
 
     compileCmd += " -o \"" + outputBinary + "\" \"" + tmpCc.generic_string() +
                    "\"" + extraSrc + extraObjs;

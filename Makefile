@@ -1,6 +1,6 @@
 CXX      := g++
 VERSION  := 1.0.0
-CXXFLAGS := -std=c++17 -O2 -Wall -Wextra -Isrc -Ivendor/quickjs -DBLUE_VERSION=\"$(VERSION)\"
+CXXFLAGS := -std=c++17 -O2 -Wall -Wextra -Isrc -isystem vendor/quickjs -DBLUE_VERSION=\"$(VERSION)\"
 CC_HOST  := cc
 TARGET   := blue_bin
 
@@ -94,6 +94,47 @@ deps:
 	        -o src/nlohmann/json.hpp; \
 	    echo "[ok]"; \
 	else echo "[skip] nlohmann/json already present."; fi
+	@if [ ! -f vendor/webview2/build/native/include/WebView2.h ]; then \
+	    echo "[fetch] WebView2 SDK..."; \
+	    mkdir -p vendor/webview2/build/native/include vendor/webview2/build/native/x64; \
+	    curl -fsSL 'https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/1.0.2849.39' \
+	        -o /tmp/webview2.nupkg && \
+	    unzip -q /tmp/webview2.nupkg \
+	        'build/native/include/WebView2.h' \
+	        'build/native/include/WebView2EnvironmentOptions.h' \
+	        'build/native/x64/WebView2Loader.dll' \
+	        -d /tmp/webview2_sdk && \
+	    cp /tmp/webview2_sdk/build/native/include/*.h vendor/webview2/build/native/include/ && \
+	    cp /tmp/webview2_sdk/build/native/x64/WebView2Loader.dll vendor/webview2/build/native/x64/ && \
+	    (cd vendor/webview2/build/native/x64 && \
+	     x86_64-w64-mingw32-nm -D WebView2Loader.dll 2>/dev/null | grep " T " | awk '{print $$3}' | \
+	     (echo "EXPORTS"; cat) > WebView2Loader.def && \
+	     x86_64-w64-mingw32-dlltool -d WebView2Loader.def -l libWebView2Loader.dll.a -D WebView2Loader.dll && \
+	     rm WebView2Loader.def) && \
+	    rm -rf /tmp/webview2.nupkg /tmp/webview2_sdk; \
+	    echo "[ok]"; \
+	else echo "[skip] WebView2 SDK already present."; fi
+	@if [ ! -f vendor/libuv-win/lib/libuv_a.a ]; then \
+	    echo "[build] libuv for Windows (cross-compile)..."; \
+	    command -v cmake >/dev/null 2>&1 || { echo "Error: cmake required for libuv Windows build."; exit 1; }; \
+	    curl -fsSL https://github.com/libuv/libuv/archive/refs/tags/v1.49.2.tar.gz \
+	        -o /tmp/libuv.tar.gz && \
+	    tar -xzf /tmp/libuv.tar.gz -C /tmp && \
+	    mkdir -p /tmp/libuv-win-build && \
+	    cmake /tmp/libuv-1.49.2 -B /tmp/libuv-win-build \
+	        -DCMAKE_TOOLCHAIN_FILE=$(CURDIR)/build/mingw-toolchain.cmake \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DBUILD_SHARED_LIBS=OFF \
+	        -DLIBUV_BUILD_TESTS=OFF \
+	        -DLIBUV_BUILD_BENCH=OFF \
+	        -Wno-dev > /dev/null && \
+	    cmake --build /tmp/libuv-win-build --target uv_a -j$(shell nproc) > /dev/null && \
+	    mkdir -p vendor/libuv-win/include vendor/libuv-win/lib && \
+	    cp -r /tmp/libuv-1.49.2/include/. vendor/libuv-win/include/ && \
+	    cp /tmp/libuv-win-build/libuv.a vendor/libuv-win/lib/libuv_a.a && \
+	    rm -rf /tmp/libuv.tar.gz /tmp/libuv-1.49.2 /tmp/libuv-win-build; \
+	    echo "[ok]"; \
+	else echo "[skip] libuv-win already present."; fi
 
 tools-deps:
 	@command -v node >/dev/null 2>&1 || { \
@@ -194,13 +235,13 @@ windows: deps tools-deps $(QJS_OBJS_WIN)
 	    echo "  Ubuntu/Debian:  sudo apt install gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64"; \
 	    exit 1; \
 	}
-	$(CXX_WIN) -std=c++17 -O2 -Isrc -Ivendor/quickjs \
+	$(CXX_WIN) -std=c++17 -O2 -Isrc -isystem vendor/quickjs \
 	    -DBLUE_VERSION=\"$(VERSION)\" \
 	    src/main.cpp $(QJS_OBJS_WIN) \
-	    -o blue_bin.exe \
+	    -o blue.exe \
 	    -lm -static-libgcc -static-libstdc++ \
 	    -Wl,-Bstatic -lpthread -Wl,-Bdynamic
-	@echo "Built blue_bin.exe (Windows x86_64)."
+	@echo "Built blue.exe (Windows x86_64)."
 
 clean:
-	rm -f $(TARGET) blue_bin.exe $(QJS_DIR)/obj/*.o $(QJS_DIR)/obj-win/*.o *.out
+	rm -f $(TARGET) blue.exe $(QJS_DIR)/obj/*.o $(QJS_DIR)/obj-win/*.o *.out

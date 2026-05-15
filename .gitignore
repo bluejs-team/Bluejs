@@ -3,6 +3,7 @@ node_modules/
 .jsc-build/
 .env
 .env.*
+*.env
 !.env.example
 .DS_Store
 *.local
@@ -15,6 +16,7 @@ node_modules/
 # Local build outputs
 /blue_bin
 /blue_bin.exe
+/blue.exe
 /examples/test
 /*.out
 /*.bin
